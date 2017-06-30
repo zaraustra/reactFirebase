@@ -1,84 +1,83 @@
 import React, { Component } from 'react';
 import * as firebase from 'firebase';
 import { Button } from 'react-bootstrap';
+import Moment from 'moment';
 
 import Header from './header'
 
 export default class extends Component {
     constructor(props) {
         super(props);
-        this.state = {
-            editContent: false,
-            page: {}
-        };
+        this.state = {};
 
-        this.showEditContent = this.showEditContent.bind(this);
-        this.changeContent = this.changeContent.bind(this);
-        this.updateDimensions = this.updateDimensions.bind(this);
+        this.fbLogin = this.fbLogin.bind(this);
+        this.addPost = this.addPost.bind(this);
     }
 
     componentDidMount() {
-        this.dbRef = firebase.database().ref().child('page');
+        this.dbRef = firebase.database().ref().child('posts');
         this.dbRef.on('value', snap => {
-            this.setState({page: snap.val()});
+            console.log(snap.val());
+            this.setState({posts: snap.val()});
         });
 
         this.setState({height: document.body.clientHeight, width: document.body.clientWidth});
-        window.addEventListener('resize', this.updateDimensions)
-
+        this.provider = new firebase.auth.FacebookAuthProvider();
     }
 
-    updateDimensions() {
-        this.setState({height: document.body.clientHeight, width: document.body.clientWidth});
+    fbLogin() {
+        firebase.auth().signInWithPopup(this.provider).then((result) => {
+            let token = result.credential.accessToken;
+            let user = result.user;
+            this.setState({user: user, token: token});
+            console.log('signed in!', token, user);
+        }).catch(function(error) {
+            let errorCode = error.code;
+            let errorMessage = error.message;
+            let email = error.email;
+            let credential = error.credential;
+            console.log('Error:', errorMessage, credential);
+        });
     }
 
-    changeContent() {
-        let dbContent = firebase.database().ref().child('page').child('content');
-        let newContent = document.getElementById('newContent').value;
-        dbContent.set(newContent);
-        this.setState({editContent: false});
-    }
-
-    showEditContent() {
-        this.setState({editContent: true});
+    addPost() {
+        let posts = firebase.database().ref().child('posts');
+        let newContent = {
+            text: document.getElementById('newPost').value,
+            author: this.state.user.displayName,
+            photo: this.state.user.photoURL,
+            date: new Date()
+        };
+        posts.push(newContent);
     }
 
     render() {
-        let state = this.state;
+        let { state } = this;
         return (
             <div className="App">
                 <Header/>
-
-                <div className="parallax">
-                    <div className="parallax__layer parallax__layer__0">
-                        <img src="http://s.cdpn.io/3/kiwi.svg"/>
-                    </div>
-                    <div className="parallax__layer parallax__layer__1">
-                        <img src="http://thenewcode.com/assets/images/thumbnails/homer-simpson.svg"/>
-                    </div>
-                    <div className="parallax__layer parallax__layer__2">
-                        <img src="http://info.sonicretro.org/images/f/f0/Classic_sonic_run3.svg"/>
-                    </div>
-                    <div className="parallax__layer parallax__layer__3">
-                        <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/2/2d/Littlebluedog.svg/2000px-Littlebluedog.svg.png"/>
-                    </div>
-                    <div className="parallax__cover">
-                        <h1>LALALAL LAL ALALAL DJFLAE JFOEFOANEFOHAOEF AEO</h1>
-                    </div>
+                <Button onClick={this.fbLogin}> FB Login </Button>
+                <div className="posts">
+                    {state.posts ? Object.keys(state.posts).map(postKey => {
+                        return <div className="post" key={postKey}>
+                            <img src={state.posts[postKey].photo} alt="Profile picture"/> {state.posts[postKey].author}, {Moment(state.posts[postKey].date).format('DD ddd MMM, YYYY')}<br/>
+                            {state.posts[postKey].text}
+                        </div>
+                    }) : null}
                 </div>
 
-                <h3>{this.state.page.title}</h3>
-                <h4>{this.state.page.subtitle}</h4>
-                <p>{this.state.page.content}</p>
-                {!this.state.editContent ?
-                    <Button onClick={this.showEditContent}>Show edit content</Button>
-                    :
+                {state.user ?
                     <div>
-                        <input type="textarea" id="newContent"/>
-                        <Button onClick={() => this.setState({editContent: false})}>Cancel</Button>
-                        <Button onClick={this.changeContent}>Save</Button>
+                        <div style={{float: 'left'}}>
+                            <h2>Welcome {state.user.displayName}!</h2>
+                            <a href={'http://www.facebook.com/' + state.user.providerData[0].uid}><img src={state.user.photoURL} alt="Profile picture"/></a>
+                        </div>
+                        <div style={{float: 'right'}}>
+                            <input type="textarea" id="newPost"/>
+                            <Button onClick={this.addPost}>Add Post</Button>
+                        </div>
                     </div>
-                }
+                : null}
             </div>
         );
     }
