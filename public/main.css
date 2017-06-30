@@ -2,6 +2,8 @@ body, html {
   font-family: Montserrat, sans-serif;
   padding-top: 100px;
   text-align: center; }
+  body img, html img {
+    border-radius: 10px; }
 
 .header {
   position: fixed;
@@ -23,5 +25,10 @@ body, html {
       margin-right: 10px; }
       .header ul li:last-child {
         margin-right: 0; }
+
+.insertMessage {
+  position: fixed;
+  bottom: 0;
+  left: 0; }
 
 /*# sourceMappingURL=main.css.map */

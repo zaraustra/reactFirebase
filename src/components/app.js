@@ -48,7 +48,10 @@ export default class extends Component {
             photo: this.state.user.photoURL,
             date: new Date()
         };
+
         posts.push(newContent);
+
+        document.getElementById('newPost').value = '';
     }
 
     render() {
@@ -56,7 +59,12 @@ export default class extends Component {
         return (
             <div className="App">
                 <Header/>
-                <Button onClick={this.fbLogin}> FB Login </Button>
+                {state.user ?
+                    <div className="welcome">
+                        <h2>Welcome {state.user.displayName}!</h2>
+                        <a href={'http://www.facebook.com/' + state.user.providerData[0].uid}><img src={state.user.photoURL} alt="Profile picture"/></a>
+                    </div>
+                : null}
                 <div className="posts">
                     {state.posts ? Object.keys(state.posts).map(postKey => {
                         return <div className="post" key={postKey}>
@@ -67,17 +75,11 @@ export default class extends Component {
                 </div>
 
                 {state.user ?
-                    <div>
-                        <div style={{float: 'left'}}>
-                            <h2>Welcome {state.user.displayName}!</h2>
-                            <a href={'http://www.facebook.com/' + state.user.providerData[0].uid}><img src={state.user.photoURL} alt="Profile picture"/></a>
-                        </div>
-                        <div style={{float: 'right'}}>
-                            <input type="textarea" id="newPost"/>
-                            <Button onClick={this.addPost}>Add Post</Button>
-                        </div>
+                    <div className="insertMessage">
+                        <input type="textarea" id="newPost"/>
+                        <Button onClick={this.addPost}>Add Post</Button>
                     </div>
-                : null}
+                : <Button onClick={this.fbLogin}> FB Login </Button>}
             </div>
         );
     }
