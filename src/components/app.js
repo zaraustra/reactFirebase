@@ -3,8 +3,9 @@ import * as firebase from 'firebase';
 import { Button } from 'react-bootstrap';
 import Moment from 'moment';
 
-import Header from './header'
+import Header from './header';
 
+// Who am I?
 export default class extends Component {
     constructor(props) {
         super(props);
